@@ -123,6 +123,7 @@ def timestamp(f):
 
 class HTMLFilter(HTMLParser):
     text = ""
+
     def handle_data(self, data):
         self.text += data
 
@@ -270,7 +271,9 @@ def make_tree(directory: Path, url: str):
         text_item("updated", latest),
         {NAME: "author", CHILDREN: [text_item("name", "Michael Young")]},
         {NAME: "link", "rel": "self", "type": "application/atom+xml", "href": url},
-    ] + list(entries.values()) # add the book entries
+    ] + list(
+        entries.values()
+    )  # add the book entries
     return {
         NAME: "feed",
         NAMESPACE: {
@@ -298,7 +301,7 @@ def generate_xml(tree: dict, outfile: Path):
 FEED_FILENAME = "index.xml"
 STYLE_FILENAME = "style.xsl"
 
-FEED_DIRECTORY_PATH = "." # TODO
+FEED_DIRECTORY_PATH = "."  # TODO
 FEED_DIRECTORY_URL = "https://myoung.uk/ebooks/"
 
 tree_dict = make_tree(Path(FEED_DIRECTORY_PATH))
@@ -306,7 +309,7 @@ feed_path = Path(FEED_DIRECTORY_PATH + "/" + FEED_FILENAME)
 generate_xml(tree_dict, DIRECTORY_URL, feed_path)
 
 xml = etree.parse(feed_path)
-xsl = etree.parse(STYLE_FILENAME) # TODO: copy style file to directory
+xsl = etree.parse(STYLE_FILENAME)  # TODO: copy style file to directory
 transform = etree.XSLT(xsl)
 result = transform(xml)
 
