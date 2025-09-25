@@ -1,12 +1,12 @@
-from pathlib import Path
-from lxml import etree
 from datetime import datetime, UTC
+from html.parser import HTMLParser
+from lxml import etree
+from pathlib import Path
 from pypdf import PdfReader
 from urllib.parse import quote
-from html.parser import HTMLParser
 
-import zipfile
 import xml.etree.ElementTree as ET
+import zipfile
 
 
 NAME = "NAME"
@@ -20,7 +20,9 @@ IMAGE = "http://opds-spec.org/image"
 FORMATS = {
     "_advanced.epub": {
         "title": "Advanced epub",
-        CHILDREN: ["An advanced format that uses the latest technology not yet fully supported by most ereaders"],
+        CHILDREN: [
+            "An advanced format that uses the latest technology not yet fully supported by most ereaders"
+        ],
         "type": "application/epub+zip",
         "rel": ACQUISITION,
     },
@@ -106,16 +108,19 @@ def text_item(name, text):
 
 
 def timestamp(f):
-    return datetime.fromtimestamp(
-        f.stat().st_mtime,
-        UTC
-    ).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.fromtimestamp(f.stat().st_mtime, UTC)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 class HTMLFilter(HTMLParser):
     text = ""
+
     def handle_data(self, data):
         self.text += data
+
 
 def filter_html(text):
     if "<" in text or "&lt;" in text:
@@ -144,7 +149,9 @@ def get_epub_metadata(name):
     with zipfile.ZipFile(name, "r") as z:
         # 1. Find the OPF path via META-INF/container.xml
         container = ET.fromstring(z.read("META-INF/container.xml"))
-        rootfile = container.find(".//{urn:oasis:names:tc:opendocument:xmlns:container}rootfile")
+        rootfile = container.find(
+            ".//{urn:oasis:names:tc:opendocument:xmlns:container}rootfile"
+        )
         opf_path = rootfile.get("full-path")
 
         # 2. Parse the OPF file
@@ -153,18 +160,21 @@ def get_epub_metadata(name):
         # OPF uses namespaces, so define them
         NS = {
             "dc": "http://purl.org/dc/elements/1.1/",
-            "opf": "http://www.idpf.org/2007/opf"
+            "opf": "http://www.idpf.org/2007/opf",
         }
 
         # 3. Extract common metadata
-        for key, tag in [("title", "title"), ("creator", "author"), ("description", "content")]:
+        for key, tag in [
+            ("title", "title"),
+            ("creator", "author"),
+            ("description", "content"),
+        ]:
             el = opf.find(f".//dc:{key}", namespaces=NS)
             if el is not None and el.text:
                 meta[tag] = el.text.strip()
 
     print(name, meta)
     return meta
-
 
 
 def make_tree(directory: Path, url: str):
@@ -178,7 +188,7 @@ def make_tree(directory: Path, url: str):
         if f.is_file():
             for ending, attributes in FORMATS.items():
                 if f.name.endswith(ending):
-                    stem = f.name[:-len(ending)]
+                    stem = f.name[: -len(ending)]
                     break
             if ending == "":
                 print("Unknown filetype", f.name)
@@ -193,10 +203,13 @@ def make_tree(directory: Path, url: str):
                 titles[stem] = stem
                 authors[stem] = "Unknown"
                 contents[stem] = ""
-            entries[stem][CHILDREN].append({
-                NAME: "link",
-                "href": url + quote(f.name),
-            } | attributes)
+            entries[stem][CHILDREN].append(
+                {
+                    NAME: "link",
+                    "href": url + quote(f.name),
+                }
+                | attributes
+            )
             updated[stem] = max(updated[stem], timestamp(f))
             latest = max(latest, timestamp(f))
             if f.name.lower().endswith(".pdf"):
@@ -217,9 +230,14 @@ def make_tree(directory: Path, url: str):
     for stem in titles:
         entries[stem][CHILDREN].insert(2, text_item("title", titles[stem]))
     for stem in authors:
-        entries[stem][CHILDREN].insert(3, {NAME: "author", CHILDREN: [text_item("name", authors[stem])]})
+        entries[stem][CHILDREN].insert(
+            3, {NAME: "author", CHILDREN: [text_item("name", authors[stem])]}
+        )
     for stem in contents:
-        entries[stem][CHILDREN].insert(4, {NAME: "content", "type": "text", CHILDREN: [filter_html(contents[stem])]})
+        entries[stem][CHILDREN].insert(
+            4,
+            {NAME: "content", "type": "text", CHILDREN: [filter_html(contents[stem])]},
+        )
 
     children = [
         text_item("title", "Michael Young's ebooks"),
@@ -227,7 +245,7 @@ def make_tree(directory: Path, url: str):
         text_item("updated", latest),
         {NAME: "author", CHILDREN: [text_item("name", "Michael Young")]},
         {NAME: "link", "rel": "self", "type": "application/atom+xml", "href": url},
-        #{NAME: "link", "rel": "alternate", "type": "text/html", "href": url + "index.html"},
+        # {NAME: "link", "rel": "alternate", "type": "text/html", "href": url + "index.html"},
     ] + list(entries.values())
     return {
         NAME: "feed",
@@ -245,15 +263,13 @@ def generate_xml(tree: dict, outfile: Path):
     tree = etree.ElementTree(root)
 
     # <?xml-stylesheet type="text/xsl" href="style.xsl"?>
-    xslt_line = etree.ProcessingInstruction("xml-stylesheet", 'type="text/xsl" href="style.xsl"')
-    tree.getroot().addprevious(xslt_line)
-    
-    tree.write(
-        str(outfile),
-        encoding="utf-8",
-        xml_declaration=True,
-        pretty_print=True
+    xslt_line = etree.ProcessingInstruction(
+        "xml-stylesheet", 'type="text/xsl" href="style.xsl"'
     )
+    tree.getroot().addprevious(xslt_line)
+
+    tree.write(str(outfile), encoding="utf-8", xml_declaration=True, pretty_print=True)
+
 
 FEED_NAME = "index.xml"
 generate_xml(make_tree(Path("."), "https://myoung.uk/ebooks/"), Path(FEED_NAME))
