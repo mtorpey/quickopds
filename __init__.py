@@ -231,7 +231,6 @@ def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
             if stem not in entries:
                 entries[stem] = {
                     NAME: "entry",
-                    # TODO: title, author, content
                     CHILDREN: [text_item("id", url + quote(stem))],
                 }
                 updated[stem] = ""
