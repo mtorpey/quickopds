@@ -1,13 +1,22 @@
+import argparse
+import os
+import xml.etree.ElementTree as ET
+
 from datetime import datetime, UTC
 from html.parser import HTMLParser
 from lxml import etree
 from pathlib import Path
 from pypdf import PdfReader
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
+from zipfile import ZipFile
 
-import xml.etree.ElementTree as ET
-import zipfile
+# Filename constants
+FEED_FILENAME = "index.xml"
+STYLE_FILENAME = "style.xsl"
 
+# Location of files in the quickopds package
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 # Constants for use in the dict we build up, for conversion to xml
 NAME = "NAME"
@@ -104,6 +113,12 @@ def dict_to_xml(d: dict) -> etree.Element:
     return element
 
 
+def force_trailing_slash(path: str):
+    if not path.endswith("/"):
+        return path + "/"
+    return path
+
+
 def text_item(name, text):
     """Make an xml entity with text contents and no attributes."""
     return {
@@ -137,9 +152,9 @@ def filter_html(text):
     return text
 
 
-def get_pdf_metadata(name):
-    """Get appropriate metadata from the pdf at the given filename."""
-    reader = PdfReader(name)
+def get_pdf_metadata(path):
+    """Get appropriate metadata from the pdf at the given filepath."""
+    reader = PdfReader(path)
     info = reader.metadata
 
     meta = dict()
@@ -150,11 +165,11 @@ def get_pdf_metadata(name):
     return meta
 
 
-def get_epub_metadata(name):
-    """Get appropriate metadata from the epub at the given filename."""
+def get_epub_metadata(path):
+    """Get appropriate metadata from the epub at the given filepath."""
     meta = dict()
 
-    with zipfile.ZipFile(name, "r") as z:
+    with ZipFile(path, "r") as z:
         # Find the opf path
         container = ET.fromstring(z.read("META-INF/container.xml"))
         rootfile = container.find(
@@ -184,8 +199,11 @@ def get_epub_metadata(name):
     return meta
 
 
-def make_tree(directory: Path, url: str):
+def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
     """Look through the given directory and return a dict representing an opds feed for its contents."""
+
+    # Normalise url
+    url = force_trailing_slash(url)
 
     # Dictionaries holding information for each book
     entries = dict()
@@ -207,7 +225,7 @@ def make_tree(directory: Path, url: str):
 
             # Skip if not a recognised file
             if ending == "":
-                print("Unknown filetype", f.name)
+                print("Ignored file", f.name)
                 continue
 
             # New book? Add an entry
@@ -237,9 +255,9 @@ def make_tree(directory: Path, url: str):
 
             # Extract book metadata from the file if possible
             if f.name.lower().endswith(".pdf"):
-                meta = get_pdf_metadata(f.name)
+                meta = get_pdf_metadata(f.resolve())
             elif f.name.lower().endswith(".epub"):
-                meta = get_epub_metadata(f.name)
+                meta = get_epub_metadata(f.resolve())
             else:
                 meta = dict()
             if "title" in meta:
@@ -266,10 +284,10 @@ def make_tree(directory: Path, url: str):
 
     # Add metadata for the whole feed
     children = [
-        text_item("title", "Michael Young's ebooks"),
+        text_item("title", feed_title),
         text_item("id", url + FEED_FILENAME),
         text_item("updated", latest),
-        {NAME: "author", CHILDREN: [text_item("name", "Michael Young")]},
+        {NAME: "author", CHILDREN: [text_item("name", feed_author)]},
         {NAME: "link", "rel": "self", "type": "application/atom+xml", "href": url},
     ] + list(
         entries.values()
@@ -296,22 +314,66 @@ def generate_xml(tree: dict, outfile: Path):
     tree.getroot().addprevious(xslt_line)
 
     tree.write(str(outfile), encoding="utf-8", xml_declaration=True, pretty_print=True)
+    print("Wrote file to", outfile)
 
 
-FEED_FILENAME = "index.xml"
-STYLE_FILENAME = "style.xsl"
+def copy_file(source, target):
+    with open(source, 'r') as f:
+        content = f.read()
 
-FEED_DIRECTORY_PATH = "."  # TODO
-FEED_DIRECTORY_URL = "https://myoung.uk/ebooks/"
+    with open(target, 'w') as f:
+        f.write(content)
+        print("Wrote file to", target)
 
-tree_dict = make_tree(Path(FEED_DIRECTORY_PATH))
-feed_path = Path(FEED_DIRECTORY_PATH + "/" + FEED_FILENAME)
-generate_xml(tree_dict, DIRECTORY_URL, feed_path)
 
-xml = etree.parse(feed_path)
-xsl = etree.parse(STYLE_FILENAME)  # TODO: copy style file to directory
-transform = etree.XSLT(xsl)
-result = transform(xml)
 
-print("STYLED VERSION")
-print(str(result))
+def test_xsl(directory: str):
+    # Find files
+    feed_path = directory + FEED_FILENAME
+    xsl_path = directory + STYLE_FILENAME
+
+    # Parse files
+    xml = etree.parse(feed_path)
+    xsl = etree.parse(STYLE_FILENAME)
+
+    # Construct html form
+    transform = etree.XSLT(xsl)
+    result = transform(xml)
+    return str(result)
+    
+
+if __name__ == "__main__":
+    # Handle arguments
+    parser = argparse.ArgumentParser(
+        prog="quickopds",
+        description="Statically generate an opds ebook catalog for a directory",
+    )
+    parser.add_argument("directory", default=".", nargs="?", type=force_trailing_slash)
+    parser.add_argument("--url", default="https://example.com/ebooks", type=force_trailing_slash)
+    parser.add_argument("--title", default="My ebook catalog")
+    parser.add_argument("--author", default="quickopds")
+    args = parser.parse_args()
+
+    # Normalise paths
+    directory_path = args.directory
+    directory_url = args.url
+    feed_title = args.title
+    feed_author = args.author
+    __location__ = force_trailing_slash(__location__)
+
+    # Compute path to feed file
+    feed_path = directory_path + FEED_FILENAME
+
+    # Create feed file
+    tree_dict = make_tree(Path(directory_path), directory_url, feed_title, feed_author)
+    generate_xml(tree_dict, feed_path)
+
+    # Copy xsl style file
+    copy_file(
+        __location__ + STYLE_FILENAME,
+        directory_path + STYLE_FILENAME
+    )
+
+    # Test xsl transformation
+    html = test_xsl(directory_path)
+    print(f"xsl transform succeeded with {len(html)} characters")
