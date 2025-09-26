@@ -15,8 +15,7 @@ FEED_FILENAME = "index.xml"
 STYLE_FILENAME = "style.xsl"
 
 # Location of files in the quickopds package
-__location__ = os.path.realpath(
-    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 # Constants for use in the dict we build up, for conversion to xml
 NAME = "NAME"
@@ -318,13 +317,12 @@ def generate_xml(tree: dict, outfile: Path):
 
 
 def copy_file(source, target):
-    with open(source, 'r') as f:
+    with open(source, "r") as f:
         content = f.read()
 
-    with open(target, 'w') as f:
+    with open(target, "w") as f:
         f.write(content)
         print("Wrote file to", target)
-
 
 
 def test_xsl(directory: str):
@@ -340,7 +338,7 @@ def test_xsl(directory: str):
     transform = etree.XSLT(xsl)
     result = transform(xml)
     return str(result)
-    
+
 
 if __name__ == "__main__":
     # Handle arguments
@@ -348,10 +346,29 @@ if __name__ == "__main__":
         prog="quickopds",
         description="Statically generate an opds ebook feed for a directory",
     )
-    parser.add_argument("directory", default=".", help="path to the local directory containing the ebooks (default current working directory)", nargs="?", type=force_trailing_slash)
-    parser.add_argument("--url", default="https://example.com/ebooks", help="url where the feed will be hosted (default https://example.com/ebooks)", type=force_trailing_slash)
-    parser.add_argument("--title", default="My ebook catalog", help="title for the feed (default 'My ebook catalog')")
-    parser.add_argument("--author", default="quickopds", help="named owner of the feed (default 'quickopds')")
+    parser.add_argument(
+        "directory",
+        default=".",
+        help="path to the local directory containing the ebooks (default current working directory)",
+        nargs="?",
+        type=force_trailing_slash,
+    )
+    parser.add_argument(
+        "--url",
+        default="https://example.com/ebooks",
+        help="url where the feed will be hosted (default https://example.com/ebooks)",
+        type=force_trailing_slash,
+    )
+    parser.add_argument(
+        "--title",
+        default="My ebook catalog",
+        help="title for the feed (default 'My ebook catalog')",
+    )
+    parser.add_argument(
+        "--author",
+        default="quickopds",
+        help="named owner of the feed (default 'quickopds')",
+    )
     args = parser.parse_args()
 
     # Normalise paths
@@ -369,10 +386,7 @@ if __name__ == "__main__":
     generate_xml(tree_dict, feed_path)
 
     # Copy xsl style file
-    copy_file(
-        __location__ + STYLE_FILENAME,
-        directory_path + STYLE_FILENAME
-    )
+    copy_file(__location__ + STYLE_FILENAME, directory_path + STYLE_FILENAME)
 
     # Test xsl transformation
     html = test_xsl(directory_path)
