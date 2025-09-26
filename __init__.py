@@ -346,12 +346,12 @@ if __name__ == "__main__":
     # Handle arguments
     parser = argparse.ArgumentParser(
         prog="quickopds",
-        description="Statically generate an opds ebook catalog for a directory",
+        description="Statically generate an opds ebook feed for a directory",
     )
-    parser.add_argument("directory", default=".", nargs="?", type=force_trailing_slash)
-    parser.add_argument("--url", default="https://example.com/ebooks", type=force_trailing_slash)
-    parser.add_argument("--title", default="My ebook catalog")
-    parser.add_argument("--author", default="quickopds")
+    parser.add_argument("directory", default=".", help="path to the local directory containing the ebooks (default current working directory)", nargs="?", type=force_trailing_slash)
+    parser.add_argument("--url", default="https://example.com/ebooks", help="url where the feed will be hosted (default https://example.com/ebooks)", type=force_trailing_slash)
+    parser.add_argument("--title", default="My ebook catalog", help="title for the feed (default 'My ebook catalog')")
+    parser.add_argument("--author", default="quickopds", help="named owner of the feed (default 'quickopds')")
     args = parser.parse_args()
 
     # Normalise paths
