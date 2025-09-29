@@ -19,18 +19,31 @@
           hgroup>* {
               margin: 0;
           }
-          img.book-cover {
-              max-width: min(30%, 9em);
-              float: left; 
-              padding-right: 1em;
-              padding-top: 1em;
-              padding-bottom: 1em;
+          figure {
+              width: min(30%, 9rem);
+              float: left;
+              margin: 1em 1em 1em 0;
+          }
+          figure.no-cover {
+              aspect-ratio: 2/3;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              text-align: center;
+              font-size: small;
+              padding: 1em;
+              box-sizing: border-box;
+              color: gold;
+              background: linear-gradient(to left, #353 90%, #131 100%);
+          }
+          figure>img {
+              width: 100%;
           }
           hr {
-          clear: left;
+              clear: left;
           }
           ul {
-          list-style-position: inside;
+              list-style-position: inside;
           }
           .author {
               font-style: italic;
@@ -63,12 +76,17 @@
                 </p>
               </hgroup>
 
+              <xsl:if test="not(atom:link[@rel='http://opds-spec.org/image'])">
+                <figure class="no-cover"><xsl:value-of select="atom:title"/></figure>
+              </xsl:if>
               <xsl:for-each select="atom:link[@rel='http://opds-spec.org/image']">
-                <img class="book-cover">
-                  <xsl:attribute name="src">
-                    <xsl:value-of select="@href"/>
-                  </xsl:attribute>
-                </img>
+                <figure class="book-cover">
+                  <img>
+                    <xsl:attribute name="src">
+                      <xsl:value-of select="@href"/>
+                    </xsl:attribute>
+                  </img>
+                </figure>
               </xsl:for-each>
 
               <xsl:if test="atom:content != ''">
