@@ -15,9 +15,6 @@ from zipfile import ZipFile
 FEED_FILENAME = "index.xml"
 STYLE_FILENAME = "style.xsl"
 
-# Location of files in the quickopds package
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
 # Constants for use in the dict we build up, for conversion to xml
 NAME = "NAME"
 CHILDREN = "CHILDREN"
@@ -390,7 +387,6 @@ def main():
     directory_url = args.url
     feed_title = args.title
     feed_author = args.author
-    __location__ = force_trailing_slash(__location__)
 
     # Compute path to feed file
     feed_path = directory_path + FEED_FILENAME
