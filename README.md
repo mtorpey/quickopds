@@ -50,9 +50,9 @@ options:
 
 ## Supported file formats
 
-Supported ebook formats are epub, azw3, pdf, html, and txt. Supported image formats (for book covers) are jpeg, png and gif. Additional formats could be added to the source code fairly easily, I've just not needed to so far.
+Supported ebook formats are epub, azw3, pdf, html, and txt. Supported image formats (for book covers) are jpeg, png and gif. Additional formats could be added to the source code easily.
 
-Files that only differ by their filename extension will be treated as different formats of the same book (or indeed, an ebook file and an image of the front cover). There's also support for the special filename styles used by Standard Ebooks: `_advanced.epub` and `.kepub.epub`.
+Files that only differ by their filename extension will be treated as different formats of the same book. Image formats will be treated as cover images for the book. There's also support for the special filename styles used by Standard Ebooks: `_advanced.epub` and `.kepub.epub`.
 
 ## Styling
 
