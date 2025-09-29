@@ -126,6 +126,16 @@ def text_item(name, text):
     }
 
 
+def timestamp_now():
+    """Get the UTC ISO-8601 timestamp for the current time."""
+    return (
+        datetime.now(UTC)
+        .replace(microsecond=0)  # floor to nearest second
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
 def timestamp(f):
     """Get the UTC ISO-8601 timestamp for the given path's last update time."""
     return (
@@ -210,7 +220,6 @@ def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
     titles = dict()
     authors = dict()
     contents = dict()
-    latest = ""
 
     # Explore the directory looking for book files
     for f in sorted(directory.iterdir()):
@@ -247,9 +256,8 @@ def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
                 | attributes
             )
 
-            # Keep the latest modified time for this book and for the whole directory
+            # Keep the latest modified time for this book
             updated[stem] = max(updated[stem], timestamp(f))
-            latest = max(latest, timestamp(f))
 
             # Extract book metadata from the file if possible
             if f.name.lower().endswith(".pdf"):
@@ -284,7 +292,7 @@ def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
     children = [
         text_item("title", feed_title),
         text_item("id", url + FEED_FILENAME),
-        text_item("updated", latest),
+        text_item("updated", timestamp_now()),
         {NAME: "author", CHILDREN: [text_item("name", feed_author)]},
         {NAME: "link", "rel": "self", "type": "application/atom+xml", "href": url},
     ] + list(
