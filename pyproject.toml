@@ -1,0 +1,35 @@
+[project]
+name = "quickopds"
+version = "0.1"
+authors = [
+  { name="Michael Young", email="mct25@st-andrews.ac.uk" },
+]
+description = "Configuration-free script that statically creates an OPDS feed for a directory containing ebooks."
+readme = "README.md"
+dependencies = [
+    "lxml~=6.0",
+    "pypdf~=6.0",
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+license = "GPL-3.0"
+license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://github.com/mtorpey/quickopds"
+Issues = "https://github.com/mtorpey/quickopds/issues"
+
+[project.scripts]
+quickopds = "quickopds:main"
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quickopds"]
+include = ["src/quickopds/style.xsl"]
