@@ -353,7 +353,7 @@ def test_xsl(directory: str):
     return str(result)
 
 
-if __name__ == "__main__":
+def main():
     # Handle arguments
     parser = argparse.ArgumentParser(
         prog="quickopds",
@@ -404,3 +404,6 @@ if __name__ == "__main__":
     # Test xsl transformation
     html = test_xsl(directory_path)
     print(f"xsl transform succeeded with {len(html)} characters")
+
+if __name__ == "__main__":
+    main()
