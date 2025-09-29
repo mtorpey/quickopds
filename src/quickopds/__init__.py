@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 
 from datetime import datetime, UTC
 from html.parser import HTMLParser
+from importlib import resources
 from lxml import etree
 from pathlib import Path
 from pypdf import PdfReader
@@ -399,7 +400,8 @@ def main():
     generate_xml(tree_dict, feed_path)
 
     # Copy xsl style file
-    copy_file(__location__ + STYLE_FILENAME, directory_path + STYLE_FILENAME)
+    style_file = resources.files("quickopds").joinpath(STYLE_FILENAME)
+    copy_file(style_file, directory_path + STYLE_FILENAME)
 
     # Test xsl transformation
     html = test_xsl(directory_path)
