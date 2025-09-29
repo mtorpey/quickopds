@@ -55,6 +55,12 @@ FORMATS = {
         "type": "application/x-mobipocket-ebook",
         "rel": ACQUISITION,
     },
+    ".mobi": {
+        "title": "mobi",
+        CHILDREN: ["Old format still supported by most devices"],
+        "type": "application/x-mobipocket-ebook",
+        "rel": ACQUISITION,
+    },
     "_cropped.pdf": {
         "title": "Cropped pdf",
         CHILDREN: ["Fixed page layout cropped tightly to content"],
