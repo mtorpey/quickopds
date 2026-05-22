@@ -1,0 +1,7 @@
+This file describes changes to quickopds since the initial release.
+
+0.2 (2026-05-22)
+  - Removed illegal contents of link objects
+
+0.1 (2025-09-29)
+  - Initial release supporting basic xml generation and xsl styling

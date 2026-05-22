@@ -1,6 +1,6 @@
 [project]
 name = "quickopds"
-version = "0.1"
+version = "0.2"
 authors = [
   { name="Michael Young", email="mct25@st-andrews.ac.uk" },
 ]
