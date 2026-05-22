@@ -106,7 +106,7 @@
                           <xsl:value-of select="@href"/>
                         </xsl:attribute>
                         <xsl:value-of select="@title"/>
-                      </a> – <xsl:value-of select="."/>
+                      </a>
                     </li>
                   </xsl:for-each>
                 </ul>

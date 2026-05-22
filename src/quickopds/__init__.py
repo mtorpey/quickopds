@@ -6,6 +6,7 @@ from datetime import datetime, UTC
 from html.parser import HTMLParser
 from importlib import resources
 from lxml import etree
+from lxml.etree import Element, ElementTree
 from pathlib import Path
 from pypdf import PdfReader
 from urllib.parse import quote, urlparse
@@ -28,58 +29,47 @@ IMAGE = "http://opds-spec.org/image"
 # Attributes to go into each opds link, based on the filename ending
 FORMATS = {
     "_advanced.epub": {
-        "title": "Advanced epub",
-        CHILDREN: [
-            "An advanced format that uses the latest technology not yet fully supported by most ereaders"
-        ],
+        "title": "Advanced epub (not fully supported)",
         "type": "application/epub+zip",
         "rel": ACQUISITION,
     },
     ".kepub.epub": {
-        "title": "kepub",
-        CHILDREN: ["Kobo devices and apps"],
+        "title": "kepub (Kobo)",
         "type": "application/kepub+zip",
         "rel": ACQUISITION,
     },
     ".epub": {
-        "title": "Compatible epub",
-        CHILDREN: ["All devices and apps except Kindles and Kobos"],
+        "title": "Compatible epub (most devices)",
         "type": "application/epub+zip",
         "rel": ACQUISITION,
     },
     ".azw3": {
-        "title": "azw3",
-        CHILDREN: ["Kindle devices and apps"],
+        "title": "azw3 (Kindle)",
         "type": "application/x-mobipocket-ebook",
         "rel": ACQUISITION,
     },
     ".mobi": {
-        "title": "mobi",
-        CHILDREN: ["Old format still supported by most devices"],
+        "title": "mobi (old format)",
         "type": "application/x-mobipocket-ebook",
         "rel": ACQUISITION,
     },
     "_cropped.pdf": {
         "title": "Cropped pdf",
-        CHILDREN: ["Fixed page layout cropped tightly to content"],
         "type": "application/pdf",
         "rel": ACQUISITION,
     },
     ".pdf": {
         "title": "pdf",
-        CHILDREN: ["Fixed page layout"],
         "type": "application/pdf",
         "rel": ACQUISITION,
     },
     ".html": {
-        "title": "html",
-        CHILDREN: ["Read directly in the browser"],
+        "title": "html (read in browser)",
         "type": "text/html",
         "rel": ACQUISITION,
     },
     ".txt": {
-        "title": "txt",
-        CHILDREN: ["Plain text with no formatting"],
+        "title": "txt (plaintext)",
         "type": "text/plain",
         "rel": ACQUISITION,
     },
@@ -101,11 +91,11 @@ FORMATS[".jpeg"] = FORMATS[".jpg"]
 FORMATS[""] = {"type": "unknown"}
 
 
-def dict_to_xml(d: dict) -> etree.Element:
+def dict_to_xml(d: dict) -> Element:
     """Convert the dict we built up into the final xml document."""
     nsmap = d[NAMESPACE] if NAMESPACE in d else {}
     attribs = {k: str(v) for k, v in d.items() if k not in [NAME, CHILDREN, NAMESPACE]}
-    element = etree.Element(d[NAME], attrib=attribs, nsmap=nsmap)
+    element = Element(d[NAME], attrib=attribs, nsmap=nsmap)
     if CHILDREN in d:
         for child in d[CHILDREN]:
             if type(child) is dict:
@@ -315,7 +305,7 @@ def make_tree(directory: Path, url: str, feed_title: str, feed_author: str):
 
 def generate_xml(tree: dict, outfile: Path):
     root = dict_to_xml(tree)
-    tree = etree.ElementTree(root)
+    tree = ElementTree(root)
 
     # <?xml-stylesheet type="text/xsl" href="style.xsl"?>
     xslt_line = etree.ProcessingInstruction(
